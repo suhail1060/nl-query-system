@@ -1,7 +1,11 @@
+
 'use client';
 
 import { useState } from 'react';
 import axios from 'axios';
+
+// Fallback API URL if environment variable is not set
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function Home() {
   const [question, setQuestion] = useState('');
@@ -15,14 +19,32 @@ export default function Home() {
     setError('');
     setAnswer(null);
 
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai-query`, {
-        question: question,
-      });
+    console.log('Submitting question:', question);
+    console.log('API URL:', `${API_URL}/ai-query`);
 
+    try {
+      const response = await axios.post(
+        `${API_URL}/ai-query`,
+        { question: question },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Response:', response.data);
       setAnswer(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'An error occurred');
+      console.error('Error details:', err);
+      console.error('Error response:', err.response?.data);
+      
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.message || 
+                          'An error occurred';
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -31,10 +53,13 @@ export default function Home() {
   // Test backend connection
   const testBackend = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+      console.log('Testing backend at:', `${API_URL}/health`);
+      const response = await axios.get(`${API_URL}/health`);
+      console.log('Backend response:', response.data);
       alert('Backend connected: ' + JSON.stringify(response.data));
-    } catch (err) {
-      alert('Backend connection failed!');
+    } catch (err: any) {
+      console.error('Backend test failed:', err);
+      alert('Backend connection failed! Check console for details. API URL: ' + API_URL);
     }
   };
 
@@ -63,6 +88,7 @@ export default function Home() {
           >
             Test Backend Connection
           </button>
+          <p className="text-xs text-gray-500 mt-2">API URL: {API_URL}</p>
         </div>
 
         {/* Query Form */}
@@ -94,6 +120,9 @@ export default function Home() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-800">
               <strong>Error:</strong> {error}
+            </p>
+            <p className="text-xs text-gray-600 mt-2">
+              Check browser console (F12) for more details
             </p>
           </div>
         )}
