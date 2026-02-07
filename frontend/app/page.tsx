@@ -16,14 +16,13 @@ export default function Home() {
     setAnswer(null);
 
     try {
-      // For now, we'll just echo the question back
-      // Later, this will call the AI agent
-      setAnswer({
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai-query`, {
         question: question,
-        response: 'AI agent not connected yet. This will generate SQL and fetch results.',
       });
+
+      setAnswer(response.data);
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.response?.data?.error || err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -38,6 +37,14 @@ export default function Home() {
       alert('Backend connection failed!');
     }
   };
+
+  const sampleQuestions = [
+    'How many users ordered in the last month?',
+    'What is the total revenue from all orders?',
+    'Show me all users who placed orders',
+    'How many orders are completed?',
+    'What is the average order amount?',
+  ];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
@@ -97,14 +104,45 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Answer:
             </h2>
-            <div className="bg-gray-50 rounded p-4">
-              <p className="text-gray-700 mb-2">
-                <strong>Your Question:</strong> {answer.question}
-              </p>
-              <p className="text-gray-700">
-                <strong>Response:</strong> {answer.response}
-              </p>
+            
+            {/* Natural Language Answer */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-blue-900 text-lg">{answer.answer}</p>
             </div>
+
+            {/* SQL Query Used */}
+            {answer.sql && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">SQL Query Generated:</h3>
+                <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+                  {answer.sql}
+                </pre>
+                {answer.explanation && (
+                  <p className="text-sm text-gray-600 mt-2 italic">{answer.explanation}</p>
+                )}
+              </div>
+            )}
+
+            {/* Data Results */}
+            {answer.data && answer.data.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                  Data ({answer.rowCount} rows):
+                </h3>
+                <div className="bg-gray-50 rounded p-4 overflow-x-auto">
+                  <pre className="text-sm text-gray-800">
+                    {JSON.stringify(answer.data, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {/* Model Info */}
+            {answer.model && (
+              <div className="mt-4 text-xs text-gray-500">
+                Powered by: {answer.model}
+              </div>
+            )}
           </div>
         )}
 
@@ -113,23 +151,17 @@ export default function Home() {
           <h3 className="text-lg font-semibold text-gray-800 mb-3">
             Sample Questions to Try:
           </h3>
-          <ul className="space-y-2">
-            {[
-              'How many users ordered in the last month?',
-              'What is the total revenue from orders?',
-              'Show me all users who placed orders',
-              'How many orders are pending?',
-            ].map((q, idx) => (
-              <li key={idx}>
-                <button
-                  onClick={() => setQuestion(q)}
-                  className="text-blue-600 hover:text-blue-800 hover:underline text-left"
-                >
-                  {q}
-                </button>
-              </li>
+          <div className="space-y-2">
+            {sampleQuestions.map((q, idx) => (
+              <button
+                key={idx}
+                onClick={() => setQuestion(q)}
+                className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-colors text-gray-700 hover:text-blue-700"
+              >
+                <span className="text-sm">💬 {q}</span>
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
       </div>
     </main>

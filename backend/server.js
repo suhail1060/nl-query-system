@@ -1,6 +1,8 @@
+
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
+const { processQuestion } = require('./ai-agent-gemini');
 require('dotenv').config();
 
 const app = express();
@@ -65,7 +67,7 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-// Execute custom SQL query (This will be used by AI agent later)
+// Execute custom SQL query
 app.post('/api/query', async (req, res) => {
   try {
     const { sql } = req.body;
@@ -84,6 +86,32 @@ app.post('/api/query', async (req, res) => {
       rowCount: result.rowCount 
     });
   } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// AI-powered natural language query endpoint
+app.post('/api/ai-query', async (req, res) => {
+  try {
+    const { question } = req.body;
+    
+    if (!question) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Question is required' 
+      });
+    }
+
+    console.log('\n=== NEW AI QUERY ===');
+    const result = await processQuestion(question);
+    console.log('=== QUERY COMPLETE ===\n');
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error in AI query:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
