@@ -17,6 +17,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - nlquery-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nlquery-backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: nlquery_db
+      PORT: 3001
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nlquery-network
 
 volumes:
   postgres_data:
+
+networks:
+  nlquery-network:
+    driver: bridge

@@ -29,3 +29,5 @@ Thumbs.db
 *.db
 *.sqlite
 
+# Root environment file
+/.env
