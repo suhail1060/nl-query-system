@@ -8,7 +8,7 @@
     "dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+   "author": "Suhail Khan  (https://github.com/suhail1060)",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

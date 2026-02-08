@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "author": "Suhail Khan  (https://github.com/suhail1060)",
   "private": true,
   "scripts": {
     "dev": "next dev",
